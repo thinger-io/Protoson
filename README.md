@@ -1,0 +1,1 @@
+Protoson is like JSON but fast and small.
