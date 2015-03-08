@@ -25,6 +25,7 @@
 #ifndef JSON_DECODER_HPP
 #define JSON_DECODER_HPP
 
+#include <stdexcept>
 #include <string>
 #include <stdlib.h>
 #include <cmath>
