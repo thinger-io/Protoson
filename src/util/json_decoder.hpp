@@ -26,7 +26,6 @@
 #define JSON_DECODER_HPP
 
 #include <string>
-#include <stdexcept>
 #include <stdlib.h>
 #include <cmath>
 #include "../pson.h"

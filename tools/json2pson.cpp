@@ -25,6 +25,9 @@
 #include "../src/pson_encoder.hpp"
 #include "../src/util/json_decoder.hpp"
 
+protoson::dynamic_memory_allocator alloc;
+protoson::memory_allocator&protoson::pool = alloc;
+
 using namespace std;
 
 class cout_writter : public protoson::pson_encoder {
