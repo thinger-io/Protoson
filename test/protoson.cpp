@@ -101,11 +101,11 @@ int main() {
     array.add(223);
     array.add(false);
     array.add(true);
-    protoson::pson_object & array_object = array.new_item();
+    protoson::pson_object & array_object = array.create_item();
     array_object["a"] = true;
     array_object["b"] = false;
     array_object["c"] = false;
-    protoson::pson_array & sub_array(array.new_item());
+    protoson::pson_array & sub_array(array.create_item());
     sub_array.add(false);
     sub_array.add(true);
     sub_array.add(false);
@@ -140,10 +140,7 @@ int main() {
     std::cout << "[*] Transcodin Time: " << measure<>::execution([&]{json_transcoder.transcode_value();}) << " μs" << std::endl;
     std::cout << "\t" << json_transcoder.get_str() << std::endl;
 
-
     std::cout << "[*] Decoding From JSON..." << std::endl;
-    std::cout << "[*] Decoding String..." << std::endl;
-    std::cout << "\t" << json_transcoder.get_str() << std::endl;
     protoson::json_decoder jsonDecoder(json_transcoder.get_str());
     protoson::pson value;
     jsonDecoder.parse(value);

@@ -951,7 +951,7 @@ namespace protoson {
                         }
 
                         // parse value
-                        parse_internal(array.new_item());
+                        parse_internal(array.create_item());
                     }
                     while (last_token == lexer::token_type::value_separator);
 

@@ -22,32 +22,29 @@
 // THE SOFTWARE.
 
 #include <iostream>
-#include "../src/pson_encoder.hpp"
+#include "../src/pson.h"
 #include "../src/util/json_decoder.hpp"
 
+using namespace protoson;
 using namespace std;
 
-class cout_writter : public protoson::pson_encoder {
-protected:
-    virtual void write(const void *buffer, size_t size) {
-        cout.write((char*)buffer, size);
-    }
-};
+// set dynamic memory allocator
+dynamic_memory_allocator alloc;
+memory_allocator&protoson::pool = alloc;
 
-int main(int argc, char **argv) {
-    string json;
+int main() {
+    pson decoded_object;
+    json_decoder decoder("{\"int\":255,\"float\":222.5,\"double\":220.222,\"bool\":false,\"string\":\"hello!\",\"null\":null,\"array\":[223,false,\"world!\",{\"a\":true,\"b\":false,\"c\":false},[false,true,false]],\"nested\":{\"int\":555,\"bool\":false,\"double\":3.14,\"array\":[],\"object\":{}}}");
+    cout << "[*] Decoding  Json..." << endl;
+    decoder.parse(decoded_object);
 
-    string lineInput;
-    while (getline(cin,lineInput)) {
-        json += lineInput;
-    }
-
-    protoson::pson value;
-    protoson::json_decoder decoder(json);
-    decoder.parse(value);
-
-    cout_writter writter;
-    writter.encode(value);
+    cout << "[*] Testing decoded json..." << endl;
+    cout << "[\"int\"] = " << (int) decoded_object["int"] << endl;
+    cout << "[\"float\"] = " << (float) decoded_object["float"] << endl;
+    cout << "[\"double\"] = " << (double) decoded_object["double"] << endl;
+    cout << "[\"bool\"] = " << (bool) decoded_object["bool"] << endl;
+    cout << "[\"string\"] = " << (const char*) decoded_object["string"] << endl;
+    cout << "[\"null\"] = " << decoded_object["null"].is_null() << endl;
 
     return 0;
 }

@@ -128,14 +128,14 @@ namespace protoson {
         void decode(pson_object & object, size_t size){
             size_t start_read = bytes_read();
             while(size-(bytes_read()-start_read)>0){
-                decode(object.new_item());
+                decode(object.create_item());
             }
         }
 
         void decode(pson_array & array, size_t size){
             size_t start_read = bytes_read();
             while(size-(bytes_read()-start_read)>0){
-                decode(array.new_item());
+                decode(array.create_item());
             }
         }
 

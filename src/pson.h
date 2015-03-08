@@ -156,7 +156,7 @@ namespace protoson {
             }
         }
 
-        T& new_item(){
+        T& create_item(){
             list_item* new_list_item = new(pool) list_item();
             if(item_==NULL){
                 item_ = new_list_item;
@@ -167,16 +167,6 @@ namespace protoson {
                 last->next_ = new_list_item;
             }
             return new_list_item->item_;
-        }
-
-        size_t size() const{
-            size_t size = 0;
-            list_item * current = item_;
-            while(current->next_!=NULL){
-                current;
-                size++;
-            }
-            return size;
         }
     };
 
@@ -442,7 +432,7 @@ namespace protoson {
                     return it.item().value();
                 }
             }
-            pson_pair & pair = new_item();
+            pson_pair & pair = create_item();
             pair.set_name(name);
             return pair.value();
         };
@@ -464,7 +454,7 @@ namespace protoson {
     public:
         template<class T>
         void add(T item_value){
-            new_item() = item_value;
+            create_item() = item_value;
         }
     };
 

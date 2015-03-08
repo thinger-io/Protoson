@@ -14,3 +14,12 @@ add_executable(pson2json ${PSON2JSON_FILES})
 
 set(TEST_FILES test/unit.cpp test/catch.hpp)
 add_executable(unit ${TEST_FILES})
+
+set(ENCODING_DECODING_EXAMPLE examples/encoding_decoding.cpp)
+add_executable(encoding_decoding_example ${ENCODING_DECODING_EXAMPLE})
+
+set(JSON_ENCODING examples/json_encoding.cpp)
+add_executable(json_encoding ${JSON_ENCODING})
+
+set(JSON_DECODING examples/json_decoding.cpp)
+add_executable(json_decoding ${JSON_DECODING})
