@@ -46,7 +46,7 @@ namespace protoson {
         circular_memory_allocator() : index_(0) {
         }
 
-        void *allocate(size_t size) {
+        virtual void *allocate(size_t size) {
             if (index_ + size > buffer_size) {
                 index_ = 0;
             }
@@ -55,18 +55,18 @@ namespace protoson {
             return position;
         }
 
-        void deallocate(void *) {
+        virtual void deallocate(void *) {
 
         }
     };
 
     class dynamic_memory_allocator : public memory_allocator{
     public:
-        void *allocate(size_t size) {
+        virtual void *allocate(size_t size) {
             return malloc(size);
         }
 
-        void deallocate(void *ptr) {
+        virtual void deallocate(void *ptr) {
             free(ptr);
         }
     };
