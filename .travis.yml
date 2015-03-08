@@ -34,4 +34,5 @@ script:
   - valgrind --error-exitcode=1 --leak-check=full ./protoson
 
 after_success:
-  - coveralls --exclude test/catch.hpp --exclude test/unit.cpp --include src/pson.h src/pson_encoder.hpp src/pson_decoder.hpp --gcov-options '\-lp' --gcov 'gcov-4.9'
+  - cd ..
+  - coveralls --exclude test/catch.hpp --exclude test/unit.cpp --include src/pson.h --include src/pson_encoder.hpp --include src/pson_decoder.hpp --gcov-options '\-lp' --gcov 'gcov-4.9'
