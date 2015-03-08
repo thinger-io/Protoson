@@ -29,7 +29,7 @@ script:
   - mkdir Debug
   - cd Debug
   - cmake -DCMAKE_BUILD_TYPE=Debug ..
-  - make
+  - make VERBOSE=1
   - ./protoson
   - valgrind --error-exitcode=1 --leak-check=full ./protoson
 
