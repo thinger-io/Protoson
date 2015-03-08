@@ -6,10 +6,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SOURCE_FILES test/protoson.cpp src/pson.h src/util/json_encoder.hpp src/pson_encoder.hpp src/pson_decoder.hpp src/util/pson_json_transcoder.hpp src/util/json_decoder.hpp)
 add_executable(protoson ${SOURCE_FILES})
 
-set(JSON2PSON_FILES tools/json2pson.cpp)
+set(JSON2PSON_FILES src/pson.h src/pson_encoder.hpp src/util/json_decoder.hpp tools/json2pson.cpp)
 add_executable(json2pson ${JSON2PSON_FILES})
 
-set(PSON2JSON_FILES tools/pson2json.cpp)
+set(PSON2JSON_FILES src/pson.h src/pson_decoder.hpp src/util/json_encoder.hpp tools/pson2json.cpp)
 add_executable(pson2json ${PSON2JSON_FILES})
 
 set(TEST_FILES test/unit.cpp test/catch.hpp)
