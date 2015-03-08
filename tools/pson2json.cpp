@@ -25,12 +25,13 @@
 #include "../src/pson_decoder.hpp"
 #include "../src/util/json_encoder.hpp"
 
-protoson::dynamic_memory_allocator alloc;
-protoson::memory_allocator&protoson::pool = alloc;
-
 using namespace std;
+using namespace protoson;
 
-class pson_reader : public protoson::pson_decoder {
+dynamic_memory_allocator alloc;
+memory_allocator& protoson::pool = alloc;
+
+class pson_reader : public pson_decoder {
 protected:
     virtual bool read(void *buffer, size_t size) {
         cin.read((char*)buffer, size);
@@ -38,17 +39,11 @@ protected:
     }
 };
 
-class json_writer : public protoson::json_encoder{
-public:
-    json_writer() : protoson::json_encoder(cout){
-    }
-};
-
 int main(int argc, char **argv) {
-    protoson::pson value;
+    pson value;
     pson_reader reader;
     reader.decode(value);
-    json_writer writer;
-    writer.encode(value);
+    json_encoder encoder(cout);
+    encoder.encode(value);
     return 0;
 }

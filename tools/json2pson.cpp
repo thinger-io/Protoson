@@ -22,15 +22,17 @@
 // THE SOFTWARE.
 
 #include <iostream>
+#include "../src/pson.h"
 #include "../src/pson_encoder.hpp"
 #include "../src/util/json_decoder.hpp"
 
-protoson::dynamic_memory_allocator alloc;
-protoson::memory_allocator&protoson::pool = alloc;
-
 using namespace std;
+using namespace protoson;
 
-class cout_writter : public protoson::pson_encoder {
+dynamic_memory_allocator alloc;
+memory_allocator&protoson::pool = alloc;
+
+class cout_writter : public pson_encoder {
 protected:
     virtual void write(const void *buffer, size_t size) {
         cout.write((char*)buffer, size);
@@ -45,8 +47,8 @@ int main(int argc, char **argv) {
         json += lineInput;
     }
 
-    protoson::pson value;
-    protoson::json_decoder decoder(json);
+    pson value;
+    json_decoder decoder(json);
     decoder.parse(value);
 
     cout_writter writter;
