@@ -86,6 +86,7 @@ char memory_buffer[512];
 // create a sample object
 pson object;
 object["hello"] = "world";
+object["value"] = 336;
 
 // encode
 memory_writer writer(memory_buffer);
@@ -95,6 +96,10 @@ writer.encode(object);
 memory_reader reader(memory_buffer);
 pson decoded_object;
 reader.decode(decoded_object);
+
+// use the values
+const char* str = decoded_object["hello"];
+int value = decoded_object["value"];
 ```
 
 ## Memory Allocators
