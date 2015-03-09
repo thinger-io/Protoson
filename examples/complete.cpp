@@ -7,8 +7,6 @@
 #include "../src/util/json_encoder.hpp"
 #include "../src/util/json_decoder.hpp"
 #include "../src/util/pson_json_transcoder.hpp"
-#include "../src/pson_encoder.hpp"
-#include "../src/pson_decoder.hpp"
 
 protoson::dynamic_memory_allocator alloc;
 protoson::memory_allocator&protoson::pool = alloc;

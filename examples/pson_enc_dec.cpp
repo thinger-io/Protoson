@@ -23,8 +23,6 @@
 
 #include <iostream>
 #include "../src/pson.h"
-#include "../src/pson_decoder.hpp"
-#include "../src/pson_encoder.hpp"
 
 using namespace protoson;
 using namespace std;

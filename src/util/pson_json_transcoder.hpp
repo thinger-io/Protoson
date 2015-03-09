@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include <sstream>
 #include <iostream>
-#include "../pson_decoder.hpp"
 
 namespace protoson {
 

@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PROTOSON_HPP
-#define PROTOSON_HPP
+#ifndef PSON_HPP
+#define PSON_HPP
 
 #include <stdint.h>
 #include <string.h>
@@ -486,6 +486,324 @@ namespace protoson {
     }
 
     pson pson::empty_value;
+
+    ////////////////////////////
+    /////// PSON_DECODER ///////
+    ////////////////////////////
+
+    class pson_decoder {
+
+    protected:
+        size_t read_;
+
+        virtual bool read(void* buffer, size_t size){
+            read_+=size;
+            return true;
+        }
+
+    public:
+
+        pson_decoder() : read_(0) {
+
+        }
+
+        size_t bytes_read(){
+            return read_;
+        }
+
+        bool pb_decode_tag(pb_wire_type& wire_type, uint32_t& field_number)
+        {
+            uint32_t temp = pb_decode_varint32();
+            wire_type = (pb_wire_type)(temp & 0x07);
+            field_number = temp >> 3;
+            return true;
+        }
+
+        uint32_t pb_decode_varint32()
+        {
+            uint32_t varint = 0;
+            uint8_t byte;
+            uint8_t bit_pos = 0;
+            do{
+                if(!read(&byte, 1) || bit_pos>=32){
+                    return varint;
+                }
+                varint |= (uint32_t)(byte&0x7F) << bit_pos;
+                bit_pos += 7;
+            }while(byte>0x80);
+            return varint;
+        }
+
+        uint64_t pb_decode_varint64()
+        {
+            uint64_t varint = 0;
+            uint8_t byte;
+            uint8_t bit_pos = 0;
+            do{
+                if(!read(&byte, 1) || bit_pos>=64){
+                    return varint;
+                }
+                varint |= (uint32_t)(byte&0x7F) << bit_pos;
+                bit_pos += 7;
+            }while(byte>0x80);
+            return varint;
+        }
+
+        bool pb_skip(size_t size){
+            uint8_t byte;
+            bool success = true;
+            for(size_t i=0; i<size; i++){
+                success &= read(&byte, 1);
+            }
+            return success;
+        }
+
+        bool pb_skip_varint(){
+            uint8_t byte;
+            bool success = true;
+            do{
+                success &= read(&byte, 1);
+            }while(byte>0x80);
+            return success;
+        }
+
+        bool pb_read_string(char *str, size_t size){
+            bool success = read(str, size);
+            str[size]=0;
+            return success;
+        }
+
+        bool pb_read_varint(pson& value)
+        {
+            char temp[10];
+            uint8_t byte=0;
+            uint8_t bytes_read=0;
+            do{
+                if(!read(&byte, 1)) return false;
+                temp[bytes_read] = byte;
+                bytes_read++;
+            }while(byte>=0x80);
+            memcpy(value.allocate(bytes_read), temp, bytes_read);
+            return true;
+        }
+
+    public:
+
+        void decode(pson_object & object, size_t size){
+            size_t start_read = bytes_read();
+            while(size-(bytes_read()-start_read)>0){
+                decode(object.create_item());
+            }
+        }
+
+        void decode(pson_array & array, size_t size){
+            size_t start_read = bytes_read();
+            while(size-(bytes_read()-start_read)>0){
+                decode(array.create_item());
+            }
+        }
+
+        void decode(pson_pair & pair){
+            uint32_t name_size = pb_decode_varint32();
+            pb_read_string(pair.allocate_name(name_size+1), name_size);
+            decode(pair.value());
+        }
+
+        void decode(pson& value) {
+            uint32_t field_number;
+            pb_wire_type wire_type;
+            pb_decode_tag(wire_type, field_number);
+            value.set_type((pson::field_type)field_number);
+            if(wire_type==pb_wire_type::length_delimited){
+                uint32_t size = pb_decode_varint32();
+                switch(field_number){
+                    case pson::string_field:
+                        pb_read_string((char*)value.allocate(size + 1), size);
+                        break;
+                    case pson::object_field:
+                        value.set_value(new (pool) pson_object);
+                        decode(*(pson_object *)value.get_value(), size);
+                        break;
+                    case pson::array_field:
+                        value.set_value(new (pool) pson_array);
+                        decode(*(pson_array *)value.get_value(), size);
+                        break;
+                    default:
+                        pb_skip(size);
+                        break;
+                }
+            }else {
+                switch (field_number) {
+                    case pson::svarint_field:
+                    case pson::varint_field:
+                        pb_read_varint(value);
+                        break;
+                    case pson::float_field:
+                        read(value.allocate(4), 4);
+                        break;
+                    case pson::double_field:
+                        read(value.allocate(8), 8);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    };
+
+    ////////////////////////////
+    /////// PSON_ENCODER ///////
+    ////////////////////////////
+
+    class pson_encoder {
+
+    protected:
+        size_t written_;
+
+        virtual void write(const void* buffer, size_t size){
+            written_+=size;
+        }
+
+    public:
+
+        pson_encoder() : written_(0) {
+        }
+
+        size_t bytes_written(){
+            return written_;
+        }
+
+        void pb_encode_tag(pb_wire_type wire_type, uint32_t field_number){
+            uint64_t tag = ((uint64_t)field_number << 3) | wire_type;
+            pb_encode_varint(tag);
+        }
+
+        void pb_encode_varint(uint32_t field, uint64_t value)
+        {
+            pb_encode_tag(varint, field);
+            pb_encode_varint(value);
+        }
+
+        void pb_write_varint(void * buffer)
+        {
+            uint8_t byte=0;
+            size_t bytes_written=0;
+            do{
+                byte = *((uint8_t*)buffer + bytes_written);
+                write(&byte, 1);
+                bytes_written++;
+            }while(byte>=0x80);
+        }
+
+        void pb_encode_varint(uint64_t value)
+        {
+            do
+            {
+                uint8_t byte = (uint8_t)(value & 0x7F);
+                value >>= 7;
+                if(value>0) byte |= 0x80;
+                write(&byte, 1);
+            }while(value>0);
+        }
+
+        void pb_encode_string(const char* str, uint32_t field_number){
+            pb_encode_tag(length_delimited, field_number);
+            pb_encode_string(str);
+        }
+
+        void pb_encode_string(const char* str){
+            size_t string_size = strlen(str);
+            pb_encode_varint(string_size);
+            write(str, string_size);
+        }
+
+        template<class T>
+        void pb_encode_submessage(T& element, uint32_t field_number)
+        {
+            pb_encode_tag(length_delimited, field_number);
+            pson_encoder sink;
+            sink.encode(element);
+            pb_encode_varint(sink.bytes_written());
+            encode(element);
+        }
+
+        void pb_encode_fixed32(void* value){
+            write(value, 4);
+        }
+
+        void pb_encode_fixed64(void* value){
+            write(value, 8);
+        }
+
+        void pb_encode_fixed32(uint32_t field, void*value)
+        {
+            pb_encode_tag(fixed_32, field);
+            pb_encode_fixed32(value);
+        }
+
+        void pb_encode_fixed64(uint32_t field, void*value)
+        {
+            pb_encode_tag(fixed_64, field);
+            pb_encode_fixed64(value);
+        }
+
+    public:
+
+        void encode(pson_object & object){
+            pson_container<pson_pair>::iterator it = object.begin();
+            while(it.valid()){
+                encode(it.item());
+                it.next();
+            }
+        }
+
+        void encode(pson_array & array){
+            pson_container<pson>::iterator it = array.begin();
+            while(it.valid()){
+                encode(it.item());
+                it.next();
+            }
+        }
+
+        void encode(pson_pair & pair){
+            pb_encode_string(pair.name());
+            encode(pair.value());
+        }
+
+        void encode(pson & value) {
+            switch (value.get_type()) {
+                case pson::true_field:
+                case pson::false_field:
+                case pson::one_field:
+                case pson::zero_field:
+                    pb_encode_tag(varint, value.get_type());
+                    break;
+                case pson::string_field:
+                    pb_encode_string((const char*)value.get_value(), pson::string_field);
+                    break;
+                case pson::svarint_field:
+                case pson::varint_field:
+                    pb_encode_tag(varint, value.get_type());
+                    pb_write_varint(value.get_value());
+                    break;
+                case pson::float_field:
+                    pb_encode_fixed32(pson::float_field, value.get_value());
+                    break;
+                case pson::double_field:
+                    pb_encode_fixed64(pson::double_field, value.get_value());
+                    break;
+                case pson::object_field:
+                    pb_encode_submessage(*(pson_object *) value.get_value(), pson::object_field);
+                    break;
+                case pson::array_field:
+                    pb_encode_submessage(*(pson_array *) value.get_value(), pson::array_field);
+                    break;
+                default:
+                    pb_encode_tag(varint, pson::null_field);
+                    break;
+            }
+        }
+    };
 }
 
 #endif

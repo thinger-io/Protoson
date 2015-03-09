@@ -29,10 +29,6 @@ script:
   - mkdir Debug
   - cd Debug
   - cmake -DCMAKE_BUILD_TYPE=Debug ..
-  - make VERBOSE=1
-  - ./protoson
-  - valgrind --error-exitcode=1 --leak-check=full ./protoson
-
-after_success:
-  - cd ..
-  - coveralls --exclude test/catch.hpp --include test/unit.cpp --include src/pson.h --include src/pson_encoder.hpp --include src/pson_decoder.hpp --gcov-options '\-lp' --gcov 'gcov-4.9'
+  - make
+  - ./pson_unit
+  - valgrind --error-exitcode=1 --leak-check=full ./pson_unit
