@@ -176,21 +176,21 @@ namespace protoson {
     class pson {
     public:
         enum field_type {
-            null_field      = 1,
-            varint_field    = 2,
-            svarint_field   = 3,
-            float_field     = 4,
-            double_field    = 5,
-            true_field      = 6,
-            false_field     = 7,
-            zero_field      = 8,
-            one_field       = 9,
-            string_field    = 10,
-            bytes_field     = 11,
-            object_field    = 12,
-            array_field     = 13
+            null_field      = 0,
+            varint_field    = 1,
+            svarint_field   = 2,
+            float_field     = 3,
+            double_field    = 4,
+            true_field      = 5,
+            false_field     = 6,
+            zero_field      = 7,
+            one_field       = 8,
+            string_field    = 9,
+            bytes_field     = 10,
+            object_field    = 11,
+            array_field     = 12
             // a message tag is encoded in a 128-base varint [1-bit][3-bit wire type][4-bit field]
-            // we have up 4 bits (1-15) for encoding fields in the first byte (zero is reserved by PB)
+            // we have up to 4 bits (0-15) for encoding fields in the first byte
         };
 
         static pson empty_value;
