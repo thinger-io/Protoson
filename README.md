@@ -4,7 +4,7 @@ Protoson is a library for encoding and decoding unstructured data in a binary fo
 
 ## Design goals
 
-- **Small compiled code size**. This library has been mainly designed for microcontrollers or devices with very limited resources. The whole library takes less than 3.5KB on an Arduino. It does not require any STL structure.
+- **Small compiled code size**. This library has been mainly designed for microcontrollers or devices with very limited resources. The whole library with encoding and decoding support takes less than 3.5KB on an Arduino. It does not require the Standard Template Library (STL).
 
 - **Custom memory allocators**. Protoson C++ can use different memory allocations approaches. Currently there are implemented a circular, and a dynamic memory allocator. Choose your allocation scheme according to your needs.
 

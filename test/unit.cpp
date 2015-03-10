@@ -62,10 +62,12 @@ TEST_CASE( "PSON Reading", "[PSON-JSON]" ) {
     SECTION("bytes value") {
         uint8_t bytes[5] = {55, 56, 57, 58, 59};
         object.set_bytes(bytes, 5);
-        pson::buffer_descriptor desc = object;
-        REQUIRE(desc.size_==5);
-        for(size_t i=0; i<desc.size_; i++){
-            REQUIRE(((uint8_t*)desc.buffer_)[i]==55+i);
+        const void* data;
+        size_t size;
+        object.get_bytes(data, size);
+        REQUIRE(size==5);
+        for(size_t i=0; i<size; i++){
+            REQUIRE(((uint8_t*)data)[i]==55+i);
         }
     }
 
