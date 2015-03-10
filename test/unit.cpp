@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+
 #include "catch.hpp"
 #include "../src/pson.h"
 #include "../src/util/json_encoder.hpp"
@@ -9,140 +10,332 @@ protoson::memory_allocator&protoson::pool = alloc;
 using namespace protoson;
 using namespace std;
 
+
+TEST_CASE( "PSON Reading", "[PSON-JSON]" ) {
+    pson object;
+
+    SECTION("true value") {
+        object = true;
+        REQUIRE((bool)object==true);
+    }
+
+    SECTION("false value") {
+        object = false;
+        REQUIRE((bool)object==false);
+    }
+
+    SECTION("zero value") {
+        object = 0;
+        REQUIRE((int)object==0);
+    }
+
+    SECTION("one value") {
+        object = 1;
+        REQUIRE((int)object==1);
+    }
+
+    SECTION("number value") {
+        object = 55;
+        REQUIRE((int)object==55);
+    }
+
+    SECTION("negative number value") {
+        object = -55;
+        REQUIRE((int)object==-55);
+    }
+
+    SECTION("float value") {
+        object = 555.66f;
+        REQUIRE((float)object==555.66f);
+    }
+
+    SECTION("double value") {
+        object = 555.66;
+        REQUIRE((double)object==555.66);
+    }
+
+    SECTION("string value") {
+        object = "hello";
+        REQUIRE(strcmp((const char*)object,"hello")==0);
+    }
+
+    SECTION("bytes value") {
+        uint8_t bytes[5] = {55, 56, 57, 58, 59};
+        object.set_bytes(bytes, 5);
+        pson::buffer_descriptor desc = object;
+        REQUIRE(desc.size_==5);
+        for(size_t i=0; i<desc.size_; i++){
+            REQUIRE(((uint8_t*)desc.buffer_)[i]==55+i);
+        }
+    }
+
+    SECTION("array values"){
+        pson_array& array = object;
+        array.add(true);
+        array.add(5);
+        array.add(555.66f);
+        array.add("hello");
+        pson_array::iterator it = array.begin();
+        REQUIRE(true == (bool)it.item());
+        it.next();
+        REQUIRE(5 == (int)it.item());
+        it.next();
+        REQUIRE(555.66f == (float)it.item());
+        it.next();
+        REQUIRE(strcmp("hello", (const char *)it.item())==0);
+    }
+}
+
+TEST_CASE( "PSON Introspection", "[PSON-JSON]" ) {
+    pson object;
+
+    SECTION("null value") {
+        REQUIRE(object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("bool value") {
+        object = true;
+        REQUIRE(!object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("number value") {
+        object = 55;
+        REQUIRE(!object.is_null());
+        REQUIRE(object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("float value") {
+        object = 555.66;
+        REQUIRE(!object.is_null());
+        REQUIRE(object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("string value") {
+        object = "hello";
+        REQUIRE(!object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(object.is_string());
+    }
+
+    SECTION("object value") {
+        pson_object& obj = object;
+        REQUIRE(!object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("array value") {
+        pson_array& array = object;
+        REQUIRE(!object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(object.is_array());
+        REQUIRE(!object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+
+    SECTION("bytes value") {
+        char bytes[4] = {55, 55, 55, 55};
+        object.set_bytes(bytes, 4);
+        REQUIRE(!object.is_null());
+        REQUIRE(!object.is_number());
+        REQUIRE(!object.is_boolean());
+        REQUIRE(!object.is_object());
+        REQUIRE(!object.is_array());
+        REQUIRE(object.is_bytes());
+        REQUIRE(!object.is_string());
+    }
+}
+
 TEST_CASE( "PSON-JSON Encoding", "[PSON-JSON]" ) {
     pson root;
     ostringstream out_stream;
     json_encoder encoder(out_stream);
 
-    SECTION( "empty object" ) {
-        pson_object & object = (pson_object &) root;
+    SECTION("null value") {
         encoder.encode(root);
-        REQUIRE("{}"==out_stream.str());
+        REQUIRE("null" == out_stream.str());
     }
 
-    SECTION( "empty array" ) {
-        pson_array & object = (pson_array &) root;
+    SECTION("true value") {
+        root = true;
         encoder.encode(root);
-        REQUIRE("[]"==out_stream.str());
+        REQUIRE("true" == out_stream.str());
     }
 
-    SECTION( "bool element" ) {
-        root["true"] = true;
-        root["false"] = false;
+    SECTION("false value") {
+        root = false;
         encoder.encode(root);
-        REQUIRE("{\"true\":true,\"false\":false}"==out_stream.str());
+        REQUIRE("false" == out_stream.str());
     }
 
-    SECTION( "zero" ) {
-        root["zero"] = 0;
+    SECTION("zero value") {
+        root = 0;
         encoder.encode(root);
-        REQUIRE("{\"zero\":0}"==out_stream.str());
+        REQUIRE("0" == out_stream.str());
     }
 
-    SECTION( "one" ) {
-        root["one"] = 1;
+    SECTION("one value") {
+        root = 1;
         encoder.encode(root);
-        REQUIRE("{\"one\":1}"==out_stream.str());
+        REQUIRE("1" == out_stream.str());
     }
 
-    SECTION( "one byte number" ) {
-        root["number"] = 65;
+    SECTION("int value") {
+        root = 225;
         encoder.encode(root);
-        REQUIRE("{\"number\":65}"==out_stream.str());
+        REQUIRE("225" == out_stream.str());
     }
 
-    SECTION( "boundary number 127" ) {
-        root["number"] = 127;
+    SECTION("signed int value") {
+        root = -225;
         encoder.encode(root);
-        REQUIRE("{\"number\":127}"==out_stream.str());
+        REQUIRE("-225" == out_stream.str());
     }
 
-    SECTION( "boundary number 128" ) {
-        root["number"] = 128;
+    SECTION("float value") {
+        root = 225.33f;
         encoder.encode(root);
-        REQUIRE("{\"number\":128}"==out_stream.str());
+        REQUIRE("225.33" == out_stream.str());
     }
 
-    SECTION( "two byte number" ) {
-        root["number"] = 329;
+    SECTION("signed float value") {
+        root = -225.33f;
         encoder.encode(root);
-        REQUIRE("{\"number\":329}"==out_stream.str());
+        REQUIRE("-225.33" == out_stream.str());
     }
 
-    SECTION( "three byte number" ) {
-        root["number"] = 23900;
+    SECTION("signed double value") {
+        root = 225.33;
         encoder.encode(root);
-        REQUIRE("{\"number\":23900}"==out_stream.str());
+        REQUIRE("225.33" == out_stream.str());
     }
 
-    SECTION( "four byte number" ) {
-        root["number"] = 9823909;
+    SECTION("signed double value") {
+        root = -225.33;
         encoder.encode(root);
-        REQUIRE("{\"number\":9823909}"==out_stream.str());
+        REQUIRE("-225.33" == out_stream.str());
     }
 
-    SECTION( "uint64_t max" ) {
-        root["number"] = std::numeric_limits<uint64_t>::max();
+    SECTION("uint64_t max value") {
+        root = std::numeric_limits<uint64_t>::max();
         encoder.encode(root);
         stringstream out;
-        out << "{\"number\":" << std::numeric_limits<uint64_t>::max() << "}";
-        REQUIRE(out.str()==out_stream.str());
+        out << std::numeric_limits<uint64_t>::max();
+        REQUIRE(out.str() == out_stream.str());
     }
 
-    SECTION( "int64_t min" ) {
-        root["number"] = std::numeric_limits<int64_t>::min();
+    SECTION("int64_t min value") {
+        root = std::numeric_limits<int64_t>::min();
         encoder.encode(root);
         stringstream out;
-        out << "{\"number\":" << std::numeric_limits<int64_t>::min() << "}";
-        REQUIRE(out.str()==out_stream.str());
+        out << std::numeric_limits<int64_t>::min();
+        REQUIRE(out.str() == out_stream.str());
     }
 
-    SECTION( "string" ) {
-        root["string"] = "hello world!";
-        encoder.encode(root);
-        REQUIRE("{\"string\":\"hello world!\"}"==out_stream.str());
-    }
-
-    SECTION( "uft8" ) {
-        root["utf8"] = "我能吞下玻璃而不伤身体。";
-        encoder.encode(root);
-        REQUIRE("{\"utf8\":\"我能吞下玻璃而不伤身体。\"}"==out_stream.str());
-    }
-
-    SECTION( "null" ) {
-        root["null"];
-        encoder.encode(root);
-        REQUIRE("{\"null\":null}"==out_stream.str());
-    }
-
-    SECTION( "int-float" ) {
+    SECTION("int-float value") {
         root["float"] = 222.0;
         encoder.encode(root);
-        REQUIRE("{\"float\":222}"==out_stream.str());
+        REQUIRE("{\"float\":222}" == out_stream.str());
     }
 
-    SECTION( "small-float" ) {
-        root["float"] = 5.123f;
+    SECTION("string value") {
+        root = "test";
         encoder.encode(root);
-        REQUIRE("{\"float\":5.123}"==out_stream.str());
+        REQUIRE("\"test\"" == out_stream.str());
     }
 
-    SECTION( "small-double" ) {
-        root["double"] = 5.1234;
+    SECTION("uft8 string value") {
+        root = "我能吞下玻璃而不伤身体。";
         encoder.encode(root);
-        REQUIRE("{\"double\":5.1234}"==out_stream.str());
+        REQUIRE("\"我能吞下玻璃而不伤身体。\"" == out_stream.str());
     }
 
-    SECTION( "small-neg-float" ) {
-        root["float"] = -5.123f;
+    SECTION("empty object") {
+        pson_object &object = (pson_object &) root;
         encoder.encode(root);
-        REQUIRE("{\"float\":-5.123}"==out_stream.str());
+        REQUIRE("{}" == out_stream.str());
     }
 
-    SECTION( "small-neg-double" ) {
-        root["double"] = -5.1234;
+    SECTION("empty array") {
+        pson_array &array = (pson_array &) root;
         encoder.encode(root);
-        REQUIRE("{\"double\":-5.1234}"==out_stream.str());
+        REQUIRE("[]" == out_stream.str());
+    }
+
+    SECTION("object with array") {
+        pson_array& array = root["array"];
+        encoder.encode(root);
+        REQUIRE("{\"array\":[]}" == out_stream.str());
+    }
+
+    SECTION("object with object") {
+        pson_object& object = root["object"];
+        encoder.encode(root);
+        REQUIRE("{\"object\":{}}" == out_stream.str());
+    }
+
+    SECTION("object with multiple elements") {
+        root["one"] = 1;
+        root["true"] = true;
+        root["str"] = "str";
+        root["float"] = 33.44f;
+        encoder.encode(root);
+        REQUIRE("{\"one\":1,\"true\":true,\"str\":\"str\",\"float\":33.44}" == out_stream.str());
+    }
+
+    SECTION("array with multiple elements") {
+        pson_array &array = (pson_array &) root;
+        array.add(1);
+        array.add(true);
+        array.add("str");
+        array.add(33.44f);
+        encoder.encode(root);
+        REQUIRE("[1,true,\"str\",33.44]" == out_stream.str());
+    }
+
+    SECTION("array with object") {
+        pson_array &array = (pson_array &) root;
+        pson_object& object = array.create_item();
+        encoder.encode(root);
+        REQUIRE("[{}]" == out_stream.str());
+    }
+
+    SECTION("array with array") {
+        pson_array &array = (pson_array &) root;
+        pson_array& sub_array = array.create_item();
+        encoder.encode(root);
+        REQUIRE("[[]]" == out_stream.str());
     }
 }
-

@@ -116,6 +116,10 @@ namespace protoson {
                 case pson::array_field:
                     encode((pson_array &)value);
                     break;
+                case pson::bytes_field: // binary fields are not supported in JSON
+                    encode('"');
+                    encode('"');
+                    break;
                 case pson::null_field:
                     encode("null");
                     break;

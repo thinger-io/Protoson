@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(protoson)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## build unit test
 add_executable(pson_unit test/unit.cpp src/util/json_encoder.hpp test/catch.hpp)
