@@ -195,19 +195,19 @@ namespace protoson {
 
         static pson empty_value;
 
-        bool is_boolean(){
+        bool is_boolean() const{
             return field_type_ == true_field || field_type_ == false_field;
         }
 
-        bool is_string(){
+        bool is_string() const{
             return field_type_ == string_field;
         }
 
-        bool is_bytes(){
+        bool is_bytes() const{
             return field_type_ == bytes_field;
         }
 
-        bool is_number(){
+        bool is_number() const{
             return  field_type_ == varint_field     ||
                     field_type_ == svarint_field    ||
                     field_type_ == float_field      ||
@@ -216,15 +216,15 @@ namespace protoson {
                     field_type_ == one_field;
         }
 
-        bool is_object(){
+        bool is_object() const{
             return field_type_ == object_field;
         }
 
-        bool is_array(){
+        bool is_array() const{
             return field_type_ == array_field;
         }
 
-        bool is_null(){
+        bool is_null() const{
             return field_type_ == null_field;
         }
 
