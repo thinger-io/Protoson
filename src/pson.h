@@ -99,7 +99,8 @@ namespace protoson {
         varint = 0,
         fixed_64 = 1,
         length_delimited = 2,
-        fixed_32 = 5
+        fixed_32 = 5,
+        pson_type = 6
     };
 
     template<class T>
@@ -192,8 +193,6 @@ namespace protoson {
             // a message tag is encoded in a 128-base varint [1-bit][3-bit wire type][4-bit field]
             // we have up to 4 bits (0-15) for encoding fields in the first byte
         };
-
-        static pson empty_value;
 
         bool is_boolean() const{
             return field_type_ == true_field || field_type_ == false_field;
@@ -432,11 +431,15 @@ namespace protoson {
             return name_;
         }
 
-        pson &value() {
+        pson& value(){
             return value_;
         }
 
-        char* name(){
+        const pson &value() const {
+            return value_;
+        }
+
+        char* name() const{
             return name_;
         }
     };
@@ -460,7 +463,8 @@ namespace protoson {
                     return it.item().value();
                 }
             }
-            return pson::empty_value;
+            static pson empty_value;
+            return empty_value;
         };
     };
 
@@ -472,7 +476,7 @@ namespace protoson {
         }
     };
 
-    pson::operator pson_object &() {
+    inline pson::operator pson_object &() {
         if (field_type_ != object_field) {
             value_ = new(pool) pson_object;
             field_type_ = object_field;
@@ -480,7 +484,7 @@ namespace protoson {
         return *((pson_object *)value_);
     }
 
-    pson::operator pson_array &() {
+    inline pson::operator pson_array &() {
         if (field_type_ != array_field) {
             value_ = new(pool) pson_array;
             field_type_ = array_field;
@@ -488,18 +492,17 @@ namespace protoson {
         return *((pson_array *)value_);
     }
 
-    pson &pson::operator[](const char *name) {
+    inline pson &pson::operator[](const char *name) {
         return ((pson_object &) *this)[name];
     }
 
-    const pson &pson::operator[](const char *name) const{
+    inline const pson &pson::operator[](const char *name) const{
         if(field_type_!=object_field){
+            static pson empty_value;
             return empty_value;
         }
         return (*(pson_object *) value_)[name];
     }
-
-    pson pson::empty_value;
 
     ////////////////////////////
     /////// PSON_DECODER ///////
