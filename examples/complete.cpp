@@ -44,8 +44,15 @@ protected:
 class json_transcoder : public protoson::pson_json_transcoder{
 private:
     char* buffer_;
+    std::ostringstream stream_;
 public:
-    json_transcoder(char *buffer) : buffer_(buffer){
+    json_transcoder(char *buffer) : protoson::pson_json_transcoder(stream_), buffer_(buffer)
+    {
+
+    }
+
+    std::string get_str(){
+        return stream_.str();
     }
 
 protected:

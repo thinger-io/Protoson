@@ -27,21 +27,17 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <sstream>
-#include <iostream>
+#include "../pson.h"
 
 namespace protoson {
 
     class pson_json_transcoder : public pson_decoder {
 
     private:
-        std::stringstream stream_;
+        std::ostream& stream_;
 
     public:
-        pson_json_transcoder(){
-        }
-
-        std::string get_str() const{
-            return stream_.str();
+        pson_json_transcoder(std::ostream& stream) : stream_(stream){
         }
 
     protected:

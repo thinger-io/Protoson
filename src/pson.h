@@ -310,7 +310,7 @@ namespace protoson {
             field_type_ = bytes_field;
         }
 
-        bool get_bytes(const void*& bytes, size_t& size){
+        bool get_bytes(const void*& bytes, size_t& size) const{
             if(field_type_ == bytes_field){
                 size = pb_decode_varint();
                 bytes = (uint8_t*) value_ + get_varint_size(size);
@@ -359,7 +359,7 @@ namespace protoson {
             value_ = value;
         }
 
-        field_type get_type(){
+        field_type get_type() const{
             return field_type_;
         }
 
