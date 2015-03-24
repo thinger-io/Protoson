@@ -187,9 +187,12 @@ namespace protoson {
             zero_field      = 7,
             one_field       = 8,
             string_field    = 9,
-            bytes_field     = 10,
-            object_field    = 11,
-            array_field     = 12
+            empty_string    = 10,
+            bytes_field     = 11,
+            empty_bytes     = 12,
+            object_field    = 13,
+            array_field     = 14,
+            unknown         = 15,
             // a message tag is encoded in a 128-base varint [1-bit][3-bit wire type][4-bit field]
             // we have up to 4 bits (0-15) for encoding fields in the first byte
         };
@@ -227,11 +230,11 @@ namespace protoson {
             return field_type_ == null_field;
         }
 
-        pson() : field_type_(null_field), value_(NULL) {
+        pson() : field_type_(unknown), value_(NULL) {
         }
 
         template<class T>
-        pson(T value) : field_type_(null_field), value_(NULL){
+        pson(T value) : field_type_(unknown), value_(NULL){
             *this = value;
         }
 
@@ -294,28 +297,40 @@ namespace protoson {
             memcpy(allocate(strlen(str)+1), str, strlen(str)+1);
         }
 
-        operator const char *() const {
-            if (field_type_ == string_field) {
-                return (const char*) value_;
+        operator const char *() {
+            switch(field_type_){
+                case string_field:
+                    return (const char*) value_;
+                case unknown:
+                    field_type_ = empty_string;
+                default:
+                    return "";
             }
-            return "";
         }
 
         void set_bytes(const void* bytes, size_t size) {
-            size_t varint_size = get_varint_size(size);
-            value_ = pool.allocate(varint_size+size);
-            pb_encode_varint(size);
-            memcpy(((uint8_t*)value_)+varint_size, bytes, size);
-            field_type_ = bytes_field;
+            if(size>0){
+                size_t varint_size = get_varint_size(size);
+                value_ = pool.allocate(varint_size+size);
+                pb_encode_varint(size);
+                memcpy(((uint8_t*)value_)+varint_size, bytes, size);
+                field_type_ = bytes_field;
+            }else{
+                field_type_ = empty_bytes;
+            }
         }
 
-        bool get_bytes(const void*& bytes, size_t& size) const{
-            if(field_type_ == bytes_field){
-                size = pb_decode_varint();
-                bytes = (uint8_t*) value_ + get_varint_size(size);
-                return true;
+        bool get_bytes(const void*& bytes, size_t& size){
+            switch(field_type_){
+                case bytes_field:
+                    size = pb_decode_varint();
+                    bytes = (uint8_t*) value_ + get_varint_size(size);
+                    return true;
+                case unknown:
+                    field_type_ = empty_bytes;
+                default:
+                    return false;
             }
-            return false;
         }
 
         void* allocate(size_t size){
@@ -326,10 +341,24 @@ namespace protoson {
         operator pson_object &();
         operator pson_array &();
         pson & operator[](const char *name);
-        const pson & operator[](const char *name) const;
+
+        operator bool(){
+            switch(field_type_){
+                case zero_field:
+                case false_field:
+                    return false;
+                case one_field:
+                case true_field:
+                    return true;
+                case unknown:
+                    field_type_ = false_field;
+                default:
+                    return false;
+            }
+        }
 
         template<class T>
-        operator T() const {
+        operator T() {
             switch(field_type_){
                 case zero_field:
                 case false_field:
@@ -345,6 +374,8 @@ namespace protoson {
                     return pb_decode_varint();
                 case svarint_field:
                     return -pb_decode_varint();
+                case unknown:
+                    field_type_ = zero_field;
                 default:
                     return 0;
             }
@@ -360,6 +391,10 @@ namespace protoson {
 
         field_type get_type() const{
             return field_type_;
+        }
+
+        void set_null(){
+            field_type_ = null_field;
         }
 
         void set_type(field_type type){
@@ -435,10 +470,6 @@ namespace protoson {
             return value_;
         }
 
-        const pson &value() const {
-            return value_;
-        }
-
         char* name() const{
             return name_;
         }
@@ -456,23 +487,14 @@ namespace protoson {
             pair.set_name(name);
             return pair.value();
         };
-
-        const pson & operator[](const char *name) const{
-            for(iterator it=begin(); it.valid(); it.next()){
-                if(strcmp(it.item().name(), name)==0){
-                    return it.item().value();
-                }
-            }
-            static pson empty_value;
-            return empty_value;
-        };
     };
 
     class pson_array : public pson_container<pson> {
     public:
         template<class T>
-        void add(T item_value){
+        pson_array& add(T item_value){
             create_item() = item_value;
+            return *this;
         }
     };
 
@@ -496,14 +518,6 @@ namespace protoson {
         return ((pson_object &) *this)[name];
     }
 
-    inline const pson &pson::operator[](const char *name) const{
-        if(field_type_!=object_field){
-            static pson empty_value;
-            return empty_value;
-        }
-        return (*(pson_object *) value_)[name];
-    }
-
     ////////////////////////////
     /////// PSON_DECODER ///////
     ////////////////////////////
@@ -522,6 +536,10 @@ namespace protoson {
 
         pson_decoder() : read_(0) {
 
+        }
+
+        void reset(){
+            read_ = 0;
         }
 
         size_t bytes_read(){
@@ -547,7 +565,7 @@ namespace protoson {
                 }
                 varint |= (uint32_t)(byte&0x7F) << bit_pos;
                 bit_pos += 7;
-            }while(byte>0x80);
+            }while(byte>=0x80);
             return varint;
         }
 
@@ -562,7 +580,7 @@ namespace protoson {
                 }
                 varint |= (uint32_t)(byte&0x7F) << bit_pos;
                 bit_pos += 7;
-            }while(byte>0x80);
+            }while(byte>=0x80);
             return varint;
         }
 
@@ -690,6 +708,10 @@ namespace protoson {
     public:
 
         pson_encoder() : written_(0) {
+        }
+
+        void reset(){
+            written_ = 0;
         }
 
         size_t bytes_written(){

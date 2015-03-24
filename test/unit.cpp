@@ -10,7 +10,6 @@ protoson::memory_allocator&protoson::pool = alloc;
 using namespace protoson;
 using namespace std;
 
-
 TEST_CASE( "PSON Reading", "[PSON-JSON]" ) {
     pson object;
 
@@ -92,6 +91,7 @@ TEST_CASE( "PSON Introspection", "[PSON-JSON]" ) {
     pson object;
 
     SECTION("null value") {
+        object.set_null();
         REQUIRE(object.is_null());
         REQUIRE(!object.is_number());
         REQUIRE(!object.is_boolean());
@@ -186,6 +186,7 @@ TEST_CASE( "PSON-JSON Encoding", "[PSON-JSON]" ) {
     json_encoder encoder(out_stream);
 
     SECTION("null value") {
+        root.set_null();
         encoder.encode(root);
         REQUIRE("null" == out_stream.str());
     }

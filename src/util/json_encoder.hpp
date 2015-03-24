@@ -110,6 +110,9 @@ namespace protoson {
                     encode((const char*)value);
                     encode('"');
                     break;
+                case pson::empty_string:
+                    encode("\"\"");
+                    break;
                 case pson::object_field:
                     encode((pson_object &)value);
                     break;
@@ -117,11 +120,15 @@ namespace protoson {
                     encode((pson_array &)value);
                     break;
                 case pson::bytes_field: // binary fields are not supported in JSON
-                    encode('"');
-                    encode('"');
+                    encode("\"\"");
+                    break;
+                case pson::empty_bytes:
+                    encode("\"\"");
                     break;
                 case pson::null_field:
                     encode("null");
+                    break;
+                case pson::unknown:
                     break;
             }
         }
