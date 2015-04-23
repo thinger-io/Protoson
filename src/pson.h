@@ -149,12 +149,17 @@ namespace protoson {
         }
 
         ~pson_container(){
+            clear();
+        }
+
+        void clear(){
             list_item* current = item_;
             while(current!=NULL){
                 list_item* next = current->next_;
                 destroy(current, pool);
                 current = next;
             }
+            item_ = NULL;
         }
 
         T& create_item(){
@@ -192,7 +197,7 @@ namespace protoson {
             empty_bytes     = 12,
             object_field    = 13,
             array_field     = 14,
-            unknown         = 15,
+            empty           = 15,
             // a message tag is encoded in a 128-base varint [1-bit][3-bit wire type][4-bit field]
             // we have up to 4 bits (0-15) for encoding fields in the first byte
         };
@@ -230,11 +235,15 @@ namespace protoson {
             return field_type_ == null_field;
         }
 
-        pson() : field_type_(unknown), value_(NULL) {
+        bool is_empty() const{
+            return field_type_ == empty;
+        }
+
+        pson() : field_type_(empty), value_(NULL) {
         }
 
         template<class T>
-        pson(T value) : field_type_(unknown), value_(NULL){
+        pson(T value) : field_type_(empty), value_(NULL){
             *this = value;
         }
 
@@ -293,15 +302,20 @@ namespace protoson {
         }
 
         void operator=(const char *str) {
-            field_type_ = string_field;
-            memcpy(allocate(strlen(str)+1), str, strlen(str)+1);
+            size_t str_size = strlen(str);
+            if(str_size==0){
+                field_type_ = empty_string;
+            }else{
+                field_type_ = string_field;
+                memcpy(allocate(str_size+1), str, str_size+1);
+            }
         }
 
         operator const char *() {
             switch(field_type_){
                 case string_field:
                     return (const char*) value_;
-                case unknown:
+                case empty:
                     field_type_ = empty_string;
                 default:
                     return "";
@@ -326,7 +340,7 @@ namespace protoson {
                     size = pb_decode_varint();
                     bytes = (uint8_t*) value_ + get_varint_size(size);
                     return true;
-                case unknown:
+                case empty:
                     field_type_ = empty_bytes;
                 default:
                     return false;
@@ -350,7 +364,7 @@ namespace protoson {
                 case one_field:
                 case true_field:
                     return true;
-                case unknown:
+                case empty:
                     field_type_ = false_field;
                 default:
                     return false;
@@ -374,7 +388,7 @@ namespace protoson {
                     return pb_decode_varint();
                 case svarint_field:
                     return -pb_decode_varint();
-                case unknown:
+                case empty:
                     field_type_ = zero_field;
                 default:
                     return 0;
@@ -649,7 +663,7 @@ namespace protoson {
             pb_wire_type wire_type;
             pb_decode_tag(wire_type, field_number);
             value.set_type((pson::field_type)field_number);
-            if(wire_type==pb_wire_type::length_delimited){
+            if(wire_type==length_delimited){
                 uint32_t size = pb_decode_varint32();
                 switch(field_number){
                     case pson::string_field:
@@ -735,9 +749,9 @@ namespace protoson {
             uint8_t bytes_written=0;
             do{
                 byte = *((uint8_t*)buffer + bytes_written);
-                write(&byte, 1);
                 bytes_written++;
             }while(byte>=0x80);
+            write(buffer, bytes_written);
             return bytes_written;
         }
 
@@ -818,12 +832,6 @@ namespace protoson {
 
         void encode(pson & value) {
             switch (value.get_type()) {
-                case pson::true_field:
-                case pson::false_field:
-                case pson::one_field:
-                case pson::zero_field:
-                    pb_encode_tag(varint, value.get_type());
-                    break;
                 case pson::string_field:
                     pb_encode_string((const char*)value.get_value(), pson::string_field);
                     break;
@@ -849,7 +857,7 @@ namespace protoson {
                     pb_encode_submessage(*(pson_array *) value.get_value(), pson::array_field);
                     break;
                 default:
-                    pb_encode_tag(varint, pson::null_field);
+                    pb_encode_tag(varint, value.get_type());
                     break;
             }
         }

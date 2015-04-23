@@ -128,7 +128,7 @@ namespace protoson {
                 case pson::null_field:
                     encode("null");
                     break;
-                case pson::unknown:
+                case pson::empty:
                     break;
             }
         }
