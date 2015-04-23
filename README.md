@@ -128,6 +128,7 @@ protoson::memory_allocator& protoson::pool = alloc;
 
 Protoson is currently being developed and should not be integrated in production code until it is more tested. Some things that requires attention now are:
 
+ - Support big endian architectures
  - Handle errors in some way while encoding and decoding (without using exceptions)
  - Complete unitary tests
  - Avoid memory leaks when reassigning values to a `pson` object.
