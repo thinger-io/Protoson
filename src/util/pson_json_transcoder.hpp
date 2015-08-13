@@ -138,6 +138,9 @@ namespace protoson {
                         encode(value);
                     }
                         break;
+                    case pson::null_field:
+                        encode("null");
+                        break;
                 }
             }
         }

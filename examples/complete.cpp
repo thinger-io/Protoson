@@ -84,41 +84,24 @@ int main() {
 
     protoson::pson object;
 
-    object["float"] = 33.25f;
-    object["double_zero"] = 0.0;
-    object["double_one"] = 1.0;
-    object["int"] = 333;
-    object["sint"] = -554456;
-    object["string"] = ":=)";
-    object["bool_true"] = true;
-    object["bool_false"] = false;
-    object["one"] = 1;
-    object["zero"] = 0;
-    object["nested"]["float"] = 33333.00;
-    object["nested"]["double"] = 45.1234321;
-    object["nested"]["bool"] = false;
-    object["more"] = 25648;
+    // adding some basic types
+    object["hello"] = "world!";
+    object["time"] = 1234567890;
+    object["float"] = 0.01234;
+    object["boolean"] = true;
+    object["otherbool"] = false;
+    object["null"].set_null();
+    // adding object in array
+    protoson::pson_object & array_object = object["obj"];
+    array_object["what"] = "that";
 
-    protoson::pson_object & nested = object["nested"];
-    nested["another_nested"] = 34;
+    // adding array
+    protoson::pson_array & array = object["arr"];
 
-    protoson::pson_array & array = object["nested"]["array"];
-    array.add(223);
-    array.add(false);
-    array.add(true);
-    protoson::pson_object & array_object = array.create_item();
-    array_object["a"] = true;
-    array_object["b"] = false;
-    array_object["c"] = false;
-    protoson::pson_array & sub_array(array.create_item());
-    sub_array.add(false);
-    sub_array.add(true);
-    sub_array.add(false);
-    sub_array.add(true);
+    // adding values in array
     array.add(1);
-    array.add(0);
-    array.add("hello");
-    array.add(224.6569874);
+    array.add(2);
+    array.add(3);
 
     // TEST JSON
     std::ostringstream json_result;

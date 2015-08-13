@@ -37,37 +37,24 @@ int main() {
     pson object;
 
     // adding some basic types
-    object["int"] = 255;
-    object["float"] = 222.5f;
-    object["double"] = 220.222;
-    object["bool"] = false;
-    object["string"] = "hello!";
+    object["hello"] = "world!";
+    object["time"] = 1234567890;
+    object["float"] = 0.01234;
+    object["boolean"] = true;
+    object["otherbool"] = "false";
     object["null"];
+    // adding object in array
+    pson_object & array_object = object["obj"];
+    array_object["what"] = "that";
 
     // adding array
-    pson_array & array = object["array"];
+    pson_array & array = object["arr"];
 
     // adding values in array
-    array.add(223);
-    array.add(false);
-    array.add("world!");
+    array.add(1);
+    array.add(2);
+    array.add(3);
 
-    // adding object in array
-    pson_object & array_object = array.create_item();
-    array_object["a"] = true;
-    array_object["b"] = false;
-    array_object["c"] = false;
-
-    // adding array in array
-    pson_array & sub_array = array.create_item();
-    sub_array.add(false);
-    sub_array.add(true);
-    sub_array.add(false);
-
-    // adding nested items
-    object["nested"]["int"] = 555;
-    object["nested"]["bool"] = false;
-    object["nested"]["double"] = 3.14;
 
     // adding nested empty array
     pson_array & nested_array = object["nested"]["array"];
