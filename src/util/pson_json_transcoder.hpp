@@ -108,9 +108,6 @@ namespace protoson {
                 }
             }else {
                 switch (field_number) {
-                    case pson::null_field:
-                        encode("null");
-                        break;
                     case pson::true_field:
                         encode("true");
                         break;
