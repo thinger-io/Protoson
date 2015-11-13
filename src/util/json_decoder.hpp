@@ -964,6 +964,7 @@ namespace protoson {
                 }
 
                 case (lexer::token_type::literal_null): {
+                    value.set_null();
                     get_token();
                     return;
                 }

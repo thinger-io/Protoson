@@ -156,6 +156,29 @@ namespace protoson {
             clear();
         }
 
+        size_t size() const{
+            size_t size = 0;
+            list_item* current = item_;
+            while(current!=NULL){
+                current = current->next_;
+                size++;
+            }
+            return size;
+        }
+
+        T* operator[](size_t index){
+            list_item* current = item_;
+            size_t current_index = 0;
+            while(current!=NULL){
+                if(current_index==index){
+                    return &current->item_;
+                }
+                current = current->next_;
+                current_index++;
+            }
+            return NULL;
+        }
+
         void clear(){
             list_item* current = item_;
             while(current!=NULL){
@@ -575,16 +598,24 @@ namespace protoson {
         uint32_t pb_decode_varint32()
         {
             uint32_t varint = 0;
+            if(try_pb_decode_varint32(varint)){
+                return varint;
+            }
+            return 0;
+        }
+
+        bool try_pb_decode_varint32(uint32_t& varint){
+            varint = 0;
             uint8_t byte;
             uint8_t bit_pos = 0;
             do{
                 if(!read(&byte, 1) || bit_pos>=32){
-                    return varint;
+                    return false;
                 }
                 varint |= (uint32_t)(byte&0x7F) << bit_pos;
                 bit_pos += 7;
             }while(byte>=0x80);
-            return varint;
+            return true;
         }
 
         uint64_t pb_decode_varint64()

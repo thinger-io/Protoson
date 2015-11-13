@@ -40,8 +40,12 @@ namespace protoson {
     public:
 
         template<class T>
-        void encode(T value){
-            stream_ << value;
+        void encode(T value, bool quoted = false){
+            if(quoted){
+                stream_ << '"' << value << '"';
+            }else{
+                stream_ << value;
+            }
         }
 
         void encode(pson_object & object){
@@ -71,13 +75,12 @@ namespace protoson {
         }
 
         void encode(pson_pair & pair){
-            encode("\"");
-            encode(pair.name());
-            encode("\":");
+            encode(pair.name(), true);
+            encode(':');
             encode(pair.value());
         }
 
-        void encode(pson & value)
+        void encode(pson & value, bool root=false)
         {
             switch(value.get_type())
             {
@@ -106,12 +109,11 @@ namespace protoson {
                     encode((double)value);
                     break;
                 case pson::string_field:
-                    encode('"');
-                    encode((const char*)value);
-                    encode('"');
+                    encode((const char*)value, !root);
                     break;
                 case pson::empty_string:
-                    encode("\"\"");
+                case pson::empty_bytes:
+                    encode("", !root);
                     break;
                 case pson::object_field:
                     encode((pson_object &)value);
@@ -119,11 +121,15 @@ namespace protoson {
                 case pson::array_field:
                     encode((pson_array &)value);
                     break;
-                case pson::bytes_field: // binary fields are not supported in JSON
-                    encode("\"\"");
-                    break;
-                case pson::empty_bytes:
-                    encode("\"\"");
+                case pson::bytes_field:
+                    if(!root){ // binary fields are not supported inside a JSON tree
+                        encode("", true);
+                    }else{
+                        const void * data = NULL;
+                        size_t size = 0;
+                        value.get_bytes(data, size);
+                        stream_.write((const char*)data, size);
+                    }
                     break;
                 case pson::null_field:
                     encode("null");
