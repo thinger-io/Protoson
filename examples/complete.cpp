@@ -89,7 +89,7 @@ int main() {
     object["time"] = 1234567890;
     object["float"] = 0.01234;
     object["boolean"] = true;
-    object["otherboolstr"] = "false";
+    object["otherbool"] = false;
     object["null"].set_null();
     // adding object in array
     protoson::pson_object & array_object = object["obj"];

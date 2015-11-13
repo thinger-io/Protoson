@@ -144,6 +144,9 @@ namespace protoson {
                     case pson::empty_string:
                         encode("\"\"");
                         break;
+                    case pson::null_field:
+                        encode("null");
+                        break;
                 }
             }
         }
