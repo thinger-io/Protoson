@@ -135,6 +135,7 @@ namespace protoson {
                     encode("null");
                     break;
                 case pson::empty:
+                    encode("{}");
                     break;
             }
         }
