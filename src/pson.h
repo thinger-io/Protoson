@@ -266,11 +266,11 @@ namespace protoson {
             return field_type_ == empty;
         }
 
-        pson() : field_type_(empty), value_(NULL) {
+        pson() : value_(NULL), field_type_(empty) {
         }
 
         template<class T>
-        pson(T value) : field_type_(empty), value_(NULL){
+        pson(T value) : value_(NULL), field_type_(empty){
             *this = value;
         }
 
@@ -383,7 +383,7 @@ namespace protoson {
         operator pson_array &();
         pson & operator[](const char *name);
 
-        operator bool(){
+        explicit operator bool(){
             switch(field_type_){
                 case zero_field:
                 case false_field:
