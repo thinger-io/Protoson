@@ -292,11 +292,7 @@ namespace protoson {
             }else if(value==1) {
                 field_type_ = one_field;
             }else{
-                if(value<0){
-                    field_type_ = svarint_field;
-                }else{
-                    field_type_ = varint_field;
-                }
+                field_type_ = value>0 ? varint_field : svarint_field;
                 uint64_t uint_value = value>0 ? value : -value;
                 value_ = pool.allocate(pson::get_varint_size(uint_value));
                 pb_encode_varint(uint_value);
