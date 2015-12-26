@@ -334,17 +334,6 @@ namespace protoson {
             }
         }
 
-        operator const char *() {
-            switch(field_type_){
-                case string_field:
-                    return (const char*) value_;
-                case empty:
-                    field_type_ = empty_string;
-                default:
-                    return "";
-            }
-        }
-
         void set_bytes(const void* bytes, size_t size) {
             if(size>0){
                 size_t varint_size = get_varint_size(size);
@@ -379,7 +368,18 @@ namespace protoson {
         operator pson_array &();
         pson & operator[](const char *name);
 
-        explicit operator bool(){
+        operator const char *() {
+            switch(field_type_){
+                case string_field:
+                    return (const char*) value_;
+                case empty:
+                    field_type_ = empty_string;
+                default:
+                    return "";
+            }
+        }
+
+        operator bool(){
             switch(field_type_){
                 case zero_field:
                 case false_field:
@@ -390,12 +390,57 @@ namespace protoson {
                 case empty:
                     field_type_ = false_field;
                 default:
-                    return false;
+                    return 0;
             }
+        }
+
+        operator char(){
+            return get_value<char>();
+        }
+
+        operator unsigned char(){
+            return get_value<unsigned char>();
+        }
+
+        operator short(){
+            return get_value<short>();
+        }
+
+        operator unsigned short(){
+            return get_value<unsigned short>();
+        }
+
+        operator int(){
+            return get_value<int>();
+        }
+
+        operator unsigned int(){
+            return get_value<int>();
+        }
+
+        operator long(){
+            return get_value<long>();
+        }
+
+        operator unsigned long(){
+            return get_value<unsigned long>();
+        }
+
+        operator float(){
+            return get_value<float>();
+        }
+
+        operator double(){
+            return get_value<double>();
         }
 
         template<class T>
         operator T() {
+            return get_value<T>();
+        }
+
+        template<class T>
+        T get_value(){
             switch(field_type_){
                 case zero_field:
                 case false_field:
