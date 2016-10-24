@@ -85,12 +85,15 @@ int main() {
     protoson::pson object;
 
     // adding some basic types
+    std::string string_hello = "hello!";
+    object["string"] = string_hello;
     object["hello"] = "world!";
     object["time"] = 1234567890;
     object["float"] = 0.01234;
     object["boolean"] = true;
     object["otherbool"] = false;
     object["null"].set_null();
+
     // adding object in array
     protoson::pson_object & array_object = object["obj"];
     array_object["what"] = "that";
