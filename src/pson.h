@@ -524,9 +524,7 @@ namespace protoson {
         operator String(){
             return (const char*)(*this);
         }
-#endif
-
-#if defined(_LIBCPP_STRING)
+#else
         void operator=(const std::string& str) {
             (*this) = str.c_str();
         }
