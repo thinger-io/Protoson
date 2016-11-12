@@ -250,6 +250,18 @@ namespace protoson {
                     field_type_ == one_field;
         }
 
+        bool is_float() const{
+            return  field_type_ == float_field      ||
+                    field_type_ == double_field;
+        }
+
+        bool is_integer() const{
+            return  field_type_ == varint_field     ||
+                    field_type_ == svarint_field    ||
+                    field_type_ == zero_field       ||
+                    field_type_ == one_field;
+        }
+
         bool is_object() const{
             return field_type_ == object_field;
         }
