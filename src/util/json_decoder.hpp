@@ -1,7 +1,7 @@
 // The MIT License (MIT)
 //
 // Copyright (c) 2013-2015 Niels Lohmann
-//               2015 THINGER LTD
+// Copyright (c) 2017 THINK BIG LABS S.L.
 // Author: alvarolb@gmail.com (Alvaro Luis Bustamante)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

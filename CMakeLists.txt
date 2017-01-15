@@ -5,6 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## build unit test
 add_executable(pson_unit test/unit.cpp src/util/json_encoder.hpp test/catch.hpp)
+add_executable(pson_binary test/binary.cpp src/util/json_decoder.hpp)
 
 # build command line tools
 add_executable(json2pson tools/json2pson.cpp src/pson.h src/util/json_decoder.hpp)

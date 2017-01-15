@@ -16,28 +16,38 @@ using namespace std;
 class memory_writer : public protoson::pson_encoder {
 private:
     char* buffer_;
+    size_t size_;
 public:
-    memory_writer(char *buffer) : buffer_(buffer){
+    memory_writer(char *buffer, size_t size) : buffer_(buffer), size_(size){
     }
 
 protected:
-    virtual void write(const void *buffer, size_t size) {
-        memcpy(&buffer_[written_], buffer, size);
-        pson_encoder::write(buffer, size);
+    virtual bool write(const void *buffer, size_t size) {
+        if(written_+size<size_){
+            memcpy(&buffer_[written_], buffer, size);
+            return pson_encoder::write(buffer, size);
+        }else{
+            return false;
+        }
     }
 };
 
 class memory_reader : public protoson::pson_decoder {
 private:
     char* buffer_;
+    size_t size_;
 public:
-    memory_reader(char *buffer) : buffer_(buffer){
+    memory_reader(char *buffer, size_t size) : buffer_(buffer), size_(size){
     }
 
 protected:
     virtual bool read(void *buffer, size_t size) {
-        memcpy(buffer, &buffer_[read_], size);
-        return pson_decoder::read(buffer, size);
+        if(read_+size<size_){
+            memcpy(buffer, &buffer_[read_], size);
+            return pson_decoder::read(buffer, size);
+        }else{
+            return false;
+        }
     }
 };
 
@@ -78,8 +88,8 @@ struct measure
 
 int main() {
     char memory_buffer[2048];
-    memory_writer pson_writer(memory_buffer);
-    memory_reader pson_reader(memory_buffer);
+    memory_writer pson_writer(memory_buffer, 2048);
+    memory_reader pson_reader(memory_buffer, 2048);
     json_transcoder json_transcoder(memory_buffer);
 
     protoson::pson object;

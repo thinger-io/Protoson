@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2015 THINGER LTD
+// Copyright (c) 2017 THINK BIG LABS S.L.
 // Author: alvarolb@gmail.com (Alvaro Luis Bustamante)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,63 +48,70 @@ namespace protoson {
 
     public:
 
-        void transcode_object(size_t size){
+        bool transcode_object(size_t size){
             encode('{');
             size_t start_read = bytes_read();
             while(size-(bytes_read()-start_read)>0){
-                transcode_pair();
+                if(!transcode_pair()){
+                    return false;
+                }
                 if(size-(bytes_read()-start_read)>0){
                     encode(',');
                 }
             }
             encode('}');
+            return true;
         }
 
-        void transcode_array(size_t size){
+        bool transcode_array(size_t size){
             encode('[');
             size_t start_read = bytes_read();
             while(size-(bytes_read()-start_read)>0){
-                transcode_value();
+                if(!transcode_value()){
+                    return false;
+                }
                 if(size-(bytes_read()-start_read)>0){
                     encode(',');
                 }
             }
             encode(']');
+            return true;
         }
 
-        void transcode_string(size_t size){
+        bool transcode_string(size_t size){
             encode('"');
             char byte;
             for(size_t i=0; i<size; i++){
-                read(&byte, 1);
+                if(!read(&byte, 1)) return false;
                 encode(byte);
             }
             encode('"');
+            return true;
         }
 
-        void transcode_pair(){
-            uint32_t name_size = pb_decode_varint32();
-            transcode_string(name_size);
+        bool transcode_pair(){
+            uint32_t name_size = 0;
+            if(!pb_decode_varint32(name_size)) return false;
+            if(!transcode_string(name_size)) return false;
             encode(":");
-            transcode_value();
+            if(!transcode_value()) return false;
+            return true;
         }
 
-        void transcode_value() {
+        bool transcode_value() {
             uint32_t field_number;
             pb_wire_type wire_type;
             pb_decode_tag(wire_type, field_number);
             if(wire_type==pb_wire_type::length_delimited){
-                uint32_t size = pb_decode_varint32();
+                uint32_t size = 0;
+                if(!pb_decode_varint32(size)) return false;
                 switch(field_number) {
                     case pson::string_field:
-                        transcode_string(size);
-                        break;
+                        return transcode_string(size);
                     case pson::object_field:
-                        transcode_object(size);
-                        break;
+                        return transcode_object(size);
                     case pson::array_field:
-                        transcode_array(size);
-                        break;
+                        return transcode_array(size);
                 }
             }else {
                 switch (field_number) {
@@ -121,20 +128,28 @@ namespace protoson {
                         encode("0");
                         break;
                     case pson::svarint_field:
-                        encode(-(int64_t)pb_decode_varint64());
+                    {
+                        uint64_t varint = 0;
+                        if(!pb_decode_varint64(varint)) return false;
+                        encode(-varint);
+                    }
                         break;
                     case pson::varint_field:
-                        encode(pb_decode_varint64());
+                    {
+                        uint64_t varint = 0;
+                        if(!pb_decode_varint64(varint)) return false;
+                        encode(varint);
+                    }
                         break;
                     case pson::float_field: {
                         float value;
-                        read(&value, 4);
+                        if(!read(&value, 4)) return false;
                         encode(value);
                     }
                         break;
                     case pson::double_field: {
                         double value;
-                        read(&value, 8);
+                        if(!read(&value, 8)) return false;
                         encode(value);
                     }
                     case pson::empty_bytes:
@@ -146,6 +161,7 @@ namespace protoson {
                         break;
                 }
             }
+            return true;
         }
     };
 }
