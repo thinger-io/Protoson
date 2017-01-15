@@ -33,8 +33,9 @@ memory_allocator&protoson::pool = alloc;
 
 class cout_writter : public pson_encoder {
 protected:
-    virtual void write(const void *buffer, size_t size) {
+    virtual bool write(const void *buffer, size_t size) {
         cout.write((char*)buffer, size);
+        return true;
     }
 };
 

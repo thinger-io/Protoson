@@ -32,32 +32,41 @@ dynamic_memory_allocator alloc;
 memory_allocator&protoson::pool = alloc;
 
 // helper class for encoding to memory (you can create your own encoders writing to file, socket, etc)
-class memory_writer : public pson_encoder {
+class memory_writer : public protoson::pson_encoder {
 private:
     char* buffer_;
+    size_t size_;
 public:
-    memory_writer(char *buffer) : buffer_(buffer){
+    memory_writer(char *buffer, size_t size) : buffer_(buffer), size_(size){
     }
 
 protected:
-    virtual void write(const void *buffer, size_t size) {
-        memcpy(&buffer_[written_], buffer, size);
-        pson_encoder::write(buffer, size);
+    virtual bool write(const void *buffer, size_t size) {
+        if(written_+size<size_){
+            memcpy(&buffer_[written_], buffer, size);
+            return pson_encoder::write(buffer, size);
+        }else{
+            return false;
+        }
     }
 };
 
-// helper class for decoding form memory
 class memory_reader : public protoson::pson_decoder {
 private:
     char* buffer_;
+    size_t size_;
 public:
-    memory_reader(char *buffer) : buffer_(buffer){
+    memory_reader(char *buffer, size_t size) : buffer_(buffer), size_(size){
     }
 
 protected:
     virtual bool read(void *buffer, size_t size) {
-        memcpy(buffer, &buffer_[read_], size);
-        return pson_decoder::read(buffer, size);
+        if(read_+size<size_){
+            memcpy(buffer, &buffer_[read_], size);
+            return pson_decoder::read(buffer, size);
+        }else{
+            return false;
+        }
     }
 };
 
@@ -108,13 +117,13 @@ int main() {
     char memory_buffer[2048];
 
     // encode
-    memory_writer pson_writer(memory_buffer);
+    memory_writer pson_writer(memory_buffer, 2048);
     cout << "[*] Encoding to Protoson..." << endl;
     pson_writer.encode(object);
     cout << "[*] Encoding Size: " <<  pson_writer.bytes_written() << " bytes" << endl;
 
     // decode
-    memory_reader pson_reader(memory_buffer);
+    memory_reader pson_reader(memory_buffer, 2048);
     protoson::pson decoded_object;
     cout << "[*] Decoding from Protoson..." << endl;
     pson_reader.decode(decoded_object);
