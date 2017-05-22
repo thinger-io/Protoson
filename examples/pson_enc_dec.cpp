@@ -80,7 +80,7 @@ int main() {
     object["double"] = 220.222;
     object["bool"] = false;
     object["string"] = "hello!";
-    object["null"];
+    object["null"].set_null();
 
     // adding array
     pson_array & array = object["array"];
@@ -91,13 +91,13 @@ int main() {
     array.add("world!");
 
     // adding object in array
-    pson_object & array_object = array.create_item();
+    pson_object & array_object = array.add_object();
     array_object["a"] = true;
     array_object["b"] = false;
     array_object["c"] = false;
 
     // adding array in array
-    pson_array & sub_array = array.create_item();
+    pson_array & sub_array = array.add_array();
     sub_array.add(false);
     sub_array.add(true);
     sub_array.add(false);

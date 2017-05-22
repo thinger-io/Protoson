@@ -53,10 +53,11 @@ protected:
 
 class json_transcoder : public protoson::pson_json_transcoder{
 private:
-    char* buffer_;
+    const char* buffer_;
+    size_t size_;
     std::ostringstream stream_;
 public:
-    json_transcoder(char *buffer) : protoson::pson_json_transcoder(stream_), buffer_(buffer)
+    json_transcoder(char *buffer, size_t size) : buffer_(buffer), size_(size), protoson::pson_json_transcoder(stream_)
     {
 
     }
@@ -67,8 +68,11 @@ public:
 
 protected:
     virtual bool read(void *buffer, size_t size) {
-        memcpy(buffer, &buffer_[read_], size);
-        return pson_decoder::read(buffer, size);
+        if(read_+size<size_){
+            memcpy(buffer, &buffer_[read_], size);
+            return pson_decoder::read(buffer, size);
+        }
+        return false;
     }
 };
 
@@ -90,7 +94,7 @@ int main() {
     char memory_buffer[2048];
     memory_writer pson_writer(memory_buffer, 2048);
     memory_reader pson_reader(memory_buffer, 2048);
-    json_transcoder json_transcoder(memory_buffer);
+    json_transcoder json_transcoder(memory_buffer, 2048);
 
     protoson::pson object;
 
@@ -138,13 +142,12 @@ int main() {
     std::cout << "\t" << json_result.str() << std::endl;
 
     std::cout << "[*] Transcoding From PSON..." << std::endl;
-    std::cout << "[*] Transcodin Time: " << measure<>::execution([&]{json_transcoder.transcode_value();}) << " μs" << std::endl;
+    std::cout << "[*] Transcoding Time: " << measure<>::execution([&]{json_transcoder.transcode_value();}) << " μs" << std::endl;
     std::cout << "\t" << json_transcoder.get_str() << std::endl;
 
     std::cout << "[*] Decoding From JSON..." << std::endl;
-    protoson::json_decoder jsonDecoder(json_transcoder.get_str());
     protoson::pson value;
-    jsonDecoder.parse(value);
+    protoson::json_decoder::parse(json_transcoder.get_str(), value);
 
     json_result.str(std::string());
     json_encoder.encode(value);

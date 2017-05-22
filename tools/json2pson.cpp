@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 
 #include <iostream>
+#include <fstream>
 #include "../src/pson.h"
 #include "../src/util/json_decoder.hpp"
 
@@ -40,17 +41,37 @@ protected:
 };
 
 int main(int argc, char **argv) {
+
     string json;
 
-    string lineInput;
-    while (getline(cin,lineInput)) {
-        json += lineInput;
+    // read input from cin
+    if(argc==1){
+        string lineInput;
+        while (getline(cin,lineInput)) {
+            json += lineInput;
+        }
+    }else{
+        std::ifstream t(argv[1]);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        json = buffer.str();
     }
 
-    pson value;
-    json_decoder decoder(json);
-    decoder.parse(value);
+    // parse and decode json
+    nlohmann::json jsonValue;
+    try{
+        jsonValue = nlohmann::json::parse(json);
+    }catch(std::invalid_argument e){
+        return -1;
+    }
 
+    // convert json to pson
+    pson value;
+    nlohmann::to_pson(jsonValue, value);
+
+    //std::cout << std::setw(4) << jsonValue << std::endl;
+
+    // encode pson to binary
     cout_writter writter;
     writter.encode(value);
 

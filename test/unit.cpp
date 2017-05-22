@@ -329,16 +329,32 @@ TEST_CASE( "PSON-JSON Encoding", "[PSON-JSON]" ) {
     }
 
     SECTION("array with object") {
-        pson_array &array = (pson_array &) root;
-        pson_object& object = array.create_item();
+        pson_array& array = (pson_array &) root;
+        pson_object& object = array.add_object();
         encoder.encode(root);
         REQUIRE("[{}]" == out_stream.str());
     }
 
+    SECTION("array with object") {
+        pson_array& array = (pson_array &) root;
+        pson_object& object = array.add_object();
+        object["key"] = 5;
+        encoder.encode(root);
+        REQUIRE("[{\"key\":5}]" == out_stream.str());
+    }
+
     SECTION("array with array") {
-        pson_array &array = (pson_array &) root;
-        pson_array& sub_array = array.create_item();
+        pson_array& array = (pson_array &) root;
+        pson_array& sub_array = array.add_array();
         encoder.encode(root);
         REQUIRE("[[]]" == out_stream.str());
+    }
+
+    SECTION("array with array") {
+        pson_array& array = (pson_array &) root;
+        pson_array& sub_array = array.add_array();
+        sub_array.add(5);
+        encoder.encode(root);
+        REQUIRE("[[5]]" == out_stream.str());
     }
 }

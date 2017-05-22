@@ -34,9 +34,9 @@ memory_allocator&protoson::pool = alloc;
 
 int main() {
     pson decoded_object;
-    json_decoder decoder("{\"int\":255,\"float\":222.5,\"double\":220.222,\"bool\":false,\"string\":\"hello!\",\"null\":null,\"array\":[223,false,\"world!\",{\"a\":true,\"b\":false,\"c\":false},[false,true,false]],\"nested\":{\"int\":555,\"bool\":false,\"double\":3.14,\"array\":[],\"object\":{}}}");
+    std::string json("{\"int\":255,\"float\":222.5,\"double\":220.222,\"bool\":false,\"string\":\"hello!\",\"null\":null,\"array\":[223,false,\"world!\",{\"a\":true,\"b\":false,\"c\":false},[false,true,false]],\"nested\":{\"int\":555,\"bool\":false,\"double\":3.14,\"array\":[],\"object\":{}}}");
     cout << "[*] Decoding  Json..." << endl;
-    decoder.parse(decoded_object);
+    json_decoder::parse(json, decoded_object);
 
     cout << "[*] Testing decoded json..." << endl;
     cout << "[\"int\"] = " << (int) decoded_object["int"] << endl;

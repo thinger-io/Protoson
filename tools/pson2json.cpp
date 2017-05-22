@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 
 #include <iostream>
+#include <fstream>
 #include "../src/util/json_encoder.hpp"
 
 using namespace std;
@@ -30,19 +31,52 @@ using namespace protoson;
 dynamic_memory_allocator alloc;
 memory_allocator& protoson::pool = alloc;
 
-class pson_reader : public pson_decoder {
+class pson_cin_reader : public pson_decoder {
 protected:
     virtual bool read(void *buffer, size_t size) {
-        cin.read((char*)buffer, size);
+        std::cin.read((char*)buffer, size);
+        if (std::cin.fail()) return false;
         return pson_decoder::read(buffer, size);
     }
 };
 
+class pson_file_reader : public pson_decoder {
+public:
+    pson_file_reader(const std::string file) : file_(file){
+    }
+protected:
+    virtual bool read(void *buffer, size_t size) {
+        file_.read((char *) buffer, size);
+        if(file_.fail()){
+            return false;
+        }else{
+            return pson_decoder::read(buffer, size);
+        }
+    }
+private:
+    std::ifstream file_;
+};
+
 int main(int argc, char **argv) {
     pson value;
-    pson_reader reader;
-    reader.decode(value);
+
+    // read input from cin
+    if(argc==1){
+        pson_cin_reader reader;
+        if(!reader.decode(value)){
+            std::cerr << "invalid format" << std::endl;
+            return -1;
+        }
+    }else{
+        pson_file_reader reader(argv[1]);
+        if(!reader.decode(value)){
+            std::cerr << "invalid format" << std::endl;
+            return -1;
+        }
+    }
+
     json_encoder encoder(cout);
     encoder.encode(value);
+
     return 0;
 }
