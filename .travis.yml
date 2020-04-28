@@ -4,14 +4,9 @@ compiler:
   - clang
   - gcc
 
-install:
-  - sudo apt-get update -qq
-  - sudo apt-get install valgrind
-
 script:
   - mkdir Debug
   - cd Debug
   - cmake -DCMAKE_BUILD_TYPE=Debug ..
   - make
   - ./pson_unit
-  - valgrind --error-exitcode=1 --leak-check=full ./pson_unit
