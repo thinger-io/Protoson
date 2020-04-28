@@ -124,17 +124,6 @@ protoson::circular_memory_allocator<512> alloc;
 protoson::memory_allocator& protoson::pool = alloc;
 ```
 
-## TODO
-
-Protoson is currently being developed and should not be integrated in production code until it is more tested. Some things that requires attention now are:
-
- - Support big endian architectures
- - Handle errors in some way while encoding and decoding (without using exceptions)
- - Complete unitary tests
- - Avoid memory leaks when reassigning values to a `pson` object.
- - Complete examples 
- - Document code
-
 ## License
 
 <img align="right" src="http://opensource.org/trademarks/opensource/OSI-Approved-License-100x137.png">
