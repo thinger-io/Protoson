@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <numeric>
+#include <cmath>
 #include "../pson.h"
 
 namespace protoson {
@@ -256,10 +257,24 @@ namespace protoson {
                     encode((uint64_t)value);
                     break;
                 case pson::float_field:
-                    encode((float)value);
+                {
+                    float val = (float) value;
+                    if(std::isnan(val)){
+                        encode("null");
+                    }else{
+                        encode(val);
+                    }
+                }
                     break;
                 case pson::double_field:
-                    encode((double)value);
+                {
+                    float val = (double) value;
+                    if(std::isnan(val)){
+                        encode("null");
+                    }else{
+                        encode(val);
+                    }
+                }
                     break;
                 case pson::string_field:
                     encode((const char*)value, !root);
@@ -278,7 +293,7 @@ namespace protoson {
                     if(!root){ // binary fields are not supported inside a JSON tree
                         encode("", true);
                     }else{
-                        const void * data = NULL;
+                        uint8_t * data = NULL;
                         size_t size = 0;
                         value.get_bytes(data, size);
                         stream_.write((const char*)data, size);

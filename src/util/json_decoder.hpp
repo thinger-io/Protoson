@@ -26,11 +26,9 @@
 
 #include <stdexcept>
 #include <string>
-#include <stdlib.h>
 #include <cmath>
 #include "json.hpp"
 #include "../pson.h"
-
 
 namespace nlohmann
 {
@@ -105,9 +103,105 @@ namespace nlohmann
         }
     }
 
+    static void to_json_internal(protoson::pson& p, json& j)
+    {
+        switch(p.get_type())
+        {
+            case protoson::pson::zero_field:
+                j = 0;
+                break;
+            case protoson::pson::one_field:
+                j = 1;
+                break;
+            case protoson::pson::true_field:
+                j = true;
+                break;
+            case protoson::pson::false_field:
+                j = false;
+                break;
+            case protoson::pson::svarint_field:
+                j = (int64_t) p;
+                break;
+            case protoson::pson::varint_field:
+                j = (uint64_t) p;
+                break;
+            case protoson::pson::float_field:
+            {
+                float val = (float) p;
+                if(std::isnan(val)){
+                    j = nullptr;
+                }else{
+                    j = val;
+                }
+            }
+                break;
+            case protoson::pson::double_field:
+            {
+                float val = (double) p;
+                if(std::isnan(val)){
+                    j = nullptr;
+                }else{
+                    j = val;
+                }
+            }
+                break;
+            case protoson::pson::string_field:
+                j = (const char*) p;
+                break;
+            case protoson::pson::empty_string:
+            case protoson::pson::empty_bytes:
+                j = "";
+                break;
+            case protoson::pson::object_field:
+            {
+                j = json::object();
+                protoson::pson_container<protoson::pson_pair>::iterator it = ((protoson::pson_object&)p).begin();
+                while(it.valid()){
+                    to_json_internal(it.item().value(), j[it.item().name()]);
+                    it.next();
+                }
+            }
+                break;
+            case protoson::pson::array_field:
+            {
+                j = json::array();
+                protoson::pson_container<protoson::pson>::iterator it = ((protoson::pson_array&)p).begin();
+                while(it.valid()){
+                    json array_value;
+                    to_json_internal(it.item(), array_value);
+                    j.push_back(array_value);
+                    it.next();
+                }
+            }
+                break;
+
+            case protoson::pson::bytes_field:
+            {
+                uint8_t * data = NULL;
+                size_t size = 0;
+                p.get_bytes(data, size);
+                // TODO JSON library will add support for binary types in next release
+                // https://github.com/nlohmann/json/issues/483
+                j = "";
+            }
+                break;
+            case protoson::pson::null_field:
+                j = nullptr;
+                break;
+            case protoson::pson::empty:
+                j = json();
+                break;
+        }
+    }
+
     static void to_pson(const json& j, protoson::pson& p)
     {
         to_pson_internal(j, p);
+    }
+
+    static void to_json(protoson::pson& p, json& j)
+    {
+        to_json_internal(p, j);
     }
 }
 
@@ -118,6 +212,24 @@ namespace protoson{
             try{
                 nlohmann::json json_parsed = nlohmann::json::parse(json);
                 nlohmann::to_pson(json_parsed, pson);
+            }catch(...){
+                return false;
+            }
+            return true;
+        }
+
+        static bool parse(const nlohmann::json& json, pson& pson){
+            try{
+                nlohmann::to_pson(json, pson);
+            }catch(...){
+                return false;
+            }
+            return true;
+        }
+
+        static bool to_json(pson& pson, nlohmann::json& json){
+            try{
+                nlohmann::to_json(pson, json);
             }catch(...){
                 return false;
             }

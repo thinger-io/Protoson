@@ -61,7 +61,7 @@ TEST_CASE( "PSON Reading", "[PSON-JSON]" ) {
     SECTION("bytes value") {
         uint8_t bytes[5] = {55, 56, 57, 58, 59};
         object.set_bytes(bytes, 5);
-        const void* data;
+        uint8_t * data;
         size_t size;
         object.get_bytes(data, size);
         REQUIRE(size==5);
@@ -168,7 +168,7 @@ TEST_CASE( "PSON Introspection", "[PSON-JSON]" ) {
     }
 
     SECTION("bytes value") {
-        char bytes[4] = {55, 55, 55, 55};
+        uint8_t bytes[4] = {55, 55, 55, 55};
         object.set_bytes(bytes, 4);
         REQUIRE(!object.is_null());
         REQUIRE(!object.is_number());

@@ -29,7 +29,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-#ifndef ARDUINO
+#ifdef ARDUINO
+#include <Arduino.h>
+#else
 #include <string>
 #endif
 
@@ -125,6 +127,7 @@ namespace protoson {
     template<class T>
     class pson_container {
 
+    protected:
         class list_item{
         public:
             list_item() : next_(NULL), previous_(NULL) {}
@@ -166,7 +169,7 @@ namespace protoson {
             }
         };
 
-    private:
+    protected:
         list_item* item_;
         list_item* last_;
 
@@ -257,6 +260,18 @@ namespace protoson {
             // we have up to 4 bits (0-15) for encoding fields in the first byte
         };
 
+        // interchange two different containers
+        static void swap(pson& source, pson& destination){
+            // destroy destination container data (if any)
+            destination.~pson();
+            // override fields
+            destination.value_ = source.value_;
+            destination.field_type_ = source.field_type_;
+            // 'clear' source container
+            source.value_ = NULL;
+            source.field_type_ = empty;
+        }
+
         bool is_boolean() const{
             return field_type_ == true_field || field_type_ == false_field;
         }
@@ -322,6 +337,8 @@ namespace protoson {
             }else{
                 pool.deallocate(value_);
             }
+            value_ = NULL;
+            field_type_ = empty;
         }
 
         template<class T>
@@ -375,7 +392,7 @@ namespace protoson {
             }
         }
 
-        void set_bytes(const void* bytes, size_t size) {
+        void set_bytes(const uint8_t* bytes, size_t size) {
             if(size>0){
                 size_t varint_size = get_varint_size(size);
                 if(allocate(varint_size+size)){
@@ -388,7 +405,7 @@ namespace protoson {
             }
         }
 
-        bool get_bytes(const void*& bytes, size_t& size){
+        bool get_bytes(uint8_t *& bytes, size_t& size){
             switch(field_type_){
                 case bytes_field:
                     size = pb_decode_varint();
@@ -679,6 +696,21 @@ namespace protoson {
                 static pson_object dummy;
                 return dummy;
             }
+        }
+
+        bool pop(){
+            if(last_==NULL) return false;
+            if(item_==last_){
+                pool.destroy(last_);
+                item_ = NULL;
+                last_ = NULL;
+            }else{
+                list_item* previous = last_->previous_;
+                pool.destroy(last_);
+                previous->next_ = NULL;
+                last_ = previous;
+            }
+            return true;
         }
     };
 

@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include "../src/pson.h"
 #include "../src/util/json_decoder.hpp"
 
